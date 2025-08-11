@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_NAME: docker.io/<DOCKERHUB_USERNAME>/appsec-family-cosign
+      IMAGE_NAME: docker.io/tiagome/appsec-family-cosign
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
