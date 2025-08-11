@@ -73,7 +73,7 @@ jobs:
           echo '</details>' >> $GITHUB_STEP_SUMMARY
 
       - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@v2
+        uses: aquasecurity/trivy-action@0.16.1
         with:
           image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           format: 'table'
@@ -90,7 +90,7 @@ jobs:
 
       - name: Cosign sign (keyless)
         id: cosign
-        uses: sigstore/cosign-action@v2
+        uses: sigstore/cosign-action@v5
         with:
           image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           args: sign --keyless
