@@ -85,15 +85,38 @@ jobs:
           echo "## Trivy scan (table)" >> $GITHUB_STEP_SUMMARY
           trivy image --format table --no-progress ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} | sed -n '1,200p' >> $GITHUB_STEP_SUMMARY || true
 
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v2
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.9.2
 
-      - name: Cosign sign (keyless)
-        id: cosign
-        uses: sigstore/cosign-action@v4
+      - id: docker_meta
+        uses: docker/metadata-action@v5.7.0
         with:
-          image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          args: sign --keyless
+          images: ${{ env.IMAGE_NAME }}
+          tags: type=sha,format=long
+
+      - name: Sign image with a key
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${images}
+        env:
+          TAGS: ${{ steps.docker_meta.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          DIGEST: ${{ steps.build-image.outputs.digest }}
+
+      - name: Sign the images with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.build-image.outputs.digest }}
+          TAGS: ${{ steps.docker_meta.outputs.tags }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
 
       - name: Write signing result to summary
         if: always()
@@ -106,3 +129,4 @@ jobs:
         with:
           name: sbom
           path: sbom.json
+
