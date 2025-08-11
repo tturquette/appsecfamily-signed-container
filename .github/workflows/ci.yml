@@ -90,7 +90,7 @@ jobs:
 
       - name: Cosign sign (keyless)
         id: cosign
-        uses: sigstore/cosign-action@v5
+        uses: sigstore/cosign-action@v4
         with:
           image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           args: sign --keyless
