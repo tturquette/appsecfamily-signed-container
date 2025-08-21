@@ -48,7 +48,7 @@ Software supply chain attacks are increasing, targeting build pipelines and depe
 `mv cosign-windows-amd64.exe cosign.exe`
 
 #### Verify Using Public Key
-.\cosign.exe verify docker.io/tiagome/appsec-family-cosign:d59d07e7763eaf1fc331ef394acf1936fe2cf3bf --key .\cosign.pub
+`.\cosign.exe verify docker.io/tiagome/appsec-family-cosign:d59d07e7763eaf1fc331ef394acf1936fe2cf3bf --key .\cosign.pub`
 
 
 If verification succeeds, Cosign confirms:
@@ -66,3 +66,28 @@ If verification succeeds, Cosign confirms:
 - Use keyless signing where possible to reduce key management risk.
 - Store public keys in a trusted location.
 - Verify signatures in production before running images.
+
+## Playing with the image
+
+- Pull the image:
+
+`docker pull docker.io/tiagome/appsec-family-cosign:d59d07e7763eaf1fc331ef394acf1936fe2cf3bf`
+
+- Run the container:
+
+`docker run -d -p 8080:80 docker.io/tiagome/appsec-family-cosign:d59d07e7763eaf1fc331ef394acf1936fe2cf3bf`
+
+- Open the browser and check the web page
+  - Open: http://localhost:8080
+  - You should see the web application running
+
+
+## Additional resources
+
+[Sigstore Cosign](https://github.com/sigstore/cosign)
+
+[OpenSSF](https://openssf.org/blog/2024/02/16/scaling-up-supply-chain-security-implementing-sigstore-for-seamless-container-image-signing/)
+
+[Kyverno writing policies](https://release-1-11-0.kyverno.io/docs/writing-policies/verify-images/))
+
+[Attesting builds](https://some-natalie.dev/blog/signing-attesting-builds/)
