@@ -2,7 +2,7 @@ name: CI - build, sbom, scan, cosign
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: ["master"]
   workflow_dispatch: {}
 
 permissions:
