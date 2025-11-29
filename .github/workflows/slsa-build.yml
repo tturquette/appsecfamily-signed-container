@@ -46,10 +46,8 @@ jobs:
       - name: Get image digest
         id: digest
         run: |
-          echo "DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }})" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${{ env.IMAGE_TAG }}" > $GITHUB_ENV
+          echo "DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }})" >> $GITHUB_ENV          
           echo "Image digest: $DIGEST"
-          echo "Image name: $IMAGE_NAME"
 
       - name: Install syft (SBOM generator)
         run: |
@@ -95,6 +93,9 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: type=sha,format=long
+    outputs:
+      image-name: ${{ env.IMAGE_NAME }}
+      image-digest: ${{ env.IMAGE_TAG }}
 
   generate-provenance:
     # Use the official SLSA builder to secure the execution environment
@@ -108,9 +109,8 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0 # Use the latest stable version
     with:
       # Pass the image name from the workflow dispatch input
-      image: ${{ needs.build-and-scan.outputs.image_tag_name }}
-      digest: ${{ needs.build-and-scan.outputs.image_digest }}
-      #digest: ${{ steps.build-image.outputs.digest }}
+      image: ${{ needs.build-and-scan.outputs.image-name }}
+      digest: ${{ needs.build-and-scan.outputs.image-digest }}
       registry-username: ${{ github.actor }}
       
   upload-final-artifact:
