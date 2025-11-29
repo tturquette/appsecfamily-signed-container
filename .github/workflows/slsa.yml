@@ -25,19 +25,6 @@ jobs:
       digest: 'sha256:a484819eb60211f5299034ac80f6a681b06f89e65866ce91f356ed7c72af059c'
       registry-username: ${{ github.actor }}
       
-      # NOTE: For a real build, you would need to specify a digest.
-      # Since you want to simulate running the generator tool, we'll use the tag.
-      # The generator_container_slsa3.yml typically expects an image to be built 
-      # and pushed *within* the workflow or specified by digest.
-      # For a simpler attestation of a *pre-existing* image, the generator tool 
-      # can be used, but the reusable workflow is the most secure method for *building* and attesting.
-
-    # This job runs *after* the slsa-framework job is complete
-    # The SLSA generator will have already uploaded the attestation as a signed artifact.
-    # We will simply download that signed artifact and re-upload it with a different name.
-
-  # This optional job helps make the final artifact easier to find
-  # by renaming and re-uploading the artifact created by the SLSA generator.
   upload-final-artifact:
     needs: [generate-provenance]
     runs-on: ubuntu-latest
