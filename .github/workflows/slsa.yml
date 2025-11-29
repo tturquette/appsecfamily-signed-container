@@ -21,6 +21,8 @@ jobs:
     with:
       # Pass the image name from the workflow dispatch input
       image: ${{ github.event.inputs.image_name }}
+      digest: 'sha256:a484819eb60211f5299034ac80f6a681b06f89e65866ce91f356ed7c72af059c'
+      registry-username: ${{ github.actor }}
       
       # NOTE: For a real build, you would need to specify a digest.
       # Since you want to simulate running the generator tool, we'll use the tag.
