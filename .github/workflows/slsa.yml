@@ -1,0 +1,39 @@
+name: Generate SLSA Provenance
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  generate_and_upload:
+    runs-on: ubuntu-latest
+
+    # The steps below simulate a simple environment and run your command.
+    # For a real SLSA-compliant build, you should use the official 
+    # slsa-framework/slsa-github-generator reusable workflows for level 3+.
+    steps:
+      - name: Set up dependencies
+        run: |
+          # Install a hypothetical 'slsa-generator' tool (replace with real installation steps if needed)
+          # For this example, we'll just ensure 'jq' is installed, which is often needed for JSONL files
+          sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Simulate running slsa-generator command
+        id: slsa_run
+        # The 'slsa-generator' tool should be installed here or run from its container.
+        # This step simulates creating the output file you specified.
+        run: |
+          # Create a dummy provenance file for demonstration
+          #echo '{"provenance_data": "Generated for nginx:1.25"}' > nginx-provenance.intoto.jsonl
+          # The actual command you wanted to run would replace the echo command:
+          slsa-generator container --image nginx:1.25 --output nginx-provenance.intoto.jsonl
+          
+          # This sets an output variable for the next step
+          echo "provenance_file=nginx-provenance.intoto.jsonl" >> $GITHUB_OUTPUT
+
+      - name: Upload Provenance as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nginx-slsa-provenance
+          path: ${{ steps.slsa_run.outputs.provenance_file }}
+          retention-days: 7 # Optional: How long to keep the artifact (max 90)
