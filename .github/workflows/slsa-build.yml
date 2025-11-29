@@ -85,7 +85,6 @@ jobs:
           trivy image --format table --no-progress ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} | sed -n '1,200p' >> $GITHUB_STEP_SUMMARY || true
 
       - name: Install Cosign
-        if: false
         uses: sigstore/cosign-installer@v3.9.2
 
       - id: docker_meta
@@ -105,6 +104,8 @@ jobs:
       packages: write # Required to upload the container image
       contents: read # Required to checkout the repo
       actions: read
+
+    
     
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0 # Use the latest stable version
     secrets: 
