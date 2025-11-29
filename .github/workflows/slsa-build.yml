@@ -1,4 +1,4 @@
-name: CI - build, sbom, scan, cosign
+name: Build and slsa-generator
 
 on:
   workflow_dispatch: {}
