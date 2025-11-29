@@ -85,6 +85,8 @@ jobs:
         run: |
           echo "## Trivy scan (table)" >> $GITHUB_STEP_SUMMARY
           trivy image --format table --no-progress ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} | sed -n '1,200p' >> $GITHUB_STEP_SUMMARY || true
+          echo $IMAGE-NAME
+          echo $IMAGE-DIGEST
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.9.2
