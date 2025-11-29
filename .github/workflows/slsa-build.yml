@@ -107,7 +107,7 @@ jobs:
 
     
     
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@9255e11bd1ff6fa028051c099dc4549121d250d2
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     secrets: 
       registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
       registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
