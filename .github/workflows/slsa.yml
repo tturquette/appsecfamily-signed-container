@@ -1,58 +1,70 @@
-name: Generate SLSA Provenance
+name: Generate Secure SLSA Provenance
 
 on:
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      image_name:
+        description: 'Name of the container image to attest (e.g., myregistry/nginx:1.25)'
+        required: true
+        default: 'nginx:1.25' # Use the image from your request as a default
 
 jobs:
-  generate_and_upload:
+  generate-provenance:
+    # Use the official SLSA builder to secure the execution environment
+    permissions:
+      id-token: write # Required for keyless signing with Sigstore
+      packages: write # Required to upload the container image
+      contents: read # Required to checkout the repo
+    
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0 # Use the latest stable version
+    with:
+      # Pass the image name from the workflow dispatch input
+      image: ${{ github.event.inputs.image_name }}
+      
+      # NOTE: For a real build, you would need to specify a digest.
+      # Since you want to simulate running the generator tool, we'll use the tag.
+      # The generator_container_slsa3.yml typically expects an image to be built 
+      # and pushed *within* the workflow or specified by digest.
+      # For a simpler attestation of a *pre-existing* image, the generator tool 
+      # can be used, but the reusable workflow is the most secure method for *building* and attesting.
+
+    # This job runs *after* the slsa-framework job is complete
+    # The SLSA generator will have already uploaded the attestation as a signed artifact.
+    # We will simply download that signed artifact and re-upload it with a different name.
+
+  # This optional job helps make the final artifact easier to find
+  # by renaming and re-uploading the artifact created by the SLSA generator.
+  upload-final-artifact:
+    needs: [generate-provenance]
     runs-on: ubuntu-latest
-
     steps:
-      - name: Install slsa-generator (Example Download)
-        id: install_generator
-        run: |
-          # --- NOTE: Replace this block with the *actual* way to install the SLSA Generator binary ---
-          #
-          # Since the official SLSA generator often runs inside a secure reusable workflow,
-          # downloading the binary directly is for testing only. 
-          # You MUST find the latest release URL for the slsa-generator for your specific use case.
-          # 
-          # For demonstration, we'll download a generic tool binary (shfmt) and rename it
-          # just to satisfy the 'slsa-generator' command requirement.
-          #
-          SLSA_VERSION="v0.0.1" # Find the actual version you need
-          DOWNLOAD_URL=https://github.com/slsa-framework/slsa-github-generator/releases/latest/download/slsa-generator_linux_amd64"
-          
-          echo "Installing slsa-generator from: ${DOWNLOAD_URL}"
-          curl -L "${DOWNLOAD_URL}" -o slsa-generator
-          chmod +x slsa-generator
-          sudo mv slsa-generator /usr/local/bin/
-          
-          # Verify installation (replace 'shfmt' check with the real 'slsa-generator' check)
-          /usr/local/bin/slsa-generator --help || echo "Installation check passed "
+      - name: Download SLSA Attestation Artifact
+        uses: actions/download-artifact@v4
+        with:
+          # The slsa-github-generator names its artifacts with a specific format
+          name: attestations
+          path: attestation_download
 
-      - name: Run slsa-generator command
-        id: slsa_run
+      - name: Find and Upload Final Attestation File
+        id: final_upload
         run: |
-          # Since the container generator needs to produce provenance for an image, 
-          # and it might require credentials or a local Docker daemon (which CI/CD runners have),
-          # we assume it runs successfully here to create the output file.
+          # The downloaded artifact will be in a folder structure. 
+          # We search for the *.intoto.jsonl file created by the generator.
+          ATTESTATION_FILE=$(find attestation_download -name "*.intoto.jsonl" -print -quit)
           
-          # The actual command you wanted to run:
-          slsa-generator container --image nginx:1.25 --output nginx-provenance.intoto.jsonl
-          
-          # Check if the output file was created (crucial for the next step)
-          if [ ! -f nginx-provenance.intoto.jsonl ]; then
-            echo "::error::slsa-generator failed to produce the output file."
-            # Create a dummy file anyway to prevent the artifact upload from failing the job
-            echo '{"status": "SLSA Generator failed to run the command."}' > nginx-provenance.intoto.jsonl
+          if [ -z "$ATTESTATION_FILE" ]; then
+            echo "::error::SLSA Attestation file not found."
+            exit 1
           fi
-          
-          echo "provenance_file=nginx-provenance.intoto.jsonl" >> $GITHUB_OUTPUT
 
-      - name: Upload Provenance as Artifact
+          echo "Found attestation file: $ATTESTATION_FILE"
+          echo "attestation_path=$ATTESTATION_FILE" >> $GITHUB_OUTPUT
+
+      - name: Upload Renamed Attestation as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nginx-slsa-provenance
-          path: ${{ steps.slsa_run.outputs.provenance_file }}
+          # Give the artifact a clear, custom name for easy download
+          name: nginx-provenance-slsa3
+          path: ${{ steps.final_upload.outputs.attestation_path }}
           retention-days: 7
