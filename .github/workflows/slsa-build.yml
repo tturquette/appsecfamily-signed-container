@@ -107,12 +107,13 @@ jobs:
       actions: read
     
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0 # Use the latest stable version
+    secrets: 
+      registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+      registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       # Pass the image name from the workflow dispatch input
       image: ${{ needs.build-and-scan.outputs.image-name }}
       digest: ${{ needs.build-and-scan.outputs.image-digest }}
-      registry-username: ${{ secrets.DOCKERHUB_USERNAME }}          
-      registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       
   upload-final-artifact:
     needs: [generate-provenance]
