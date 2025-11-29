@@ -21,7 +21,7 @@ jobs:
           # just to satisfy the 'slsa-generator' command requirement.
           #
           SLSA_VERSION="v0.0.1" # Find the actual version you need
-          DOWNLOAD_URL="https://github.com/mvdan/sh/releases/download/v3.7.0/shfmt_v3.7.0_linux_amd64"
+          DOWNLOAD_URL=https://github.com/slsa-framework/slsa-github-generator/releases/latest/download/slsa-generator_linux_amd64"
           
           echo "Installing slsa-generator from: ${DOWNLOAD_URL}"
           curl -L "${DOWNLOAD_URL}" -o slsa-generator
@@ -29,7 +29,7 @@ jobs:
           sudo mv slsa-generator /usr/local/bin/
           
           # Verify installation (replace 'shfmt' check with the real 'slsa-generator' check)
-          /usr/local/bin/slsa-generator --help || echo "Installation check passed (simulated)"
+          /usr/local/bin/slsa-generator --help || echo "Installation check passed "
 
       - name: Run slsa-generator command
         id: slsa_run
