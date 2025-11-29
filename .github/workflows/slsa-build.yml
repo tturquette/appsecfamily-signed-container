@@ -111,7 +111,8 @@ jobs:
       # Pass the image name from the workflow dispatch input
       image: ${{ needs.build-and-scan.outputs.image-name }}
       digest: ${{ needs.build-and-scan.outputs.image-digest }}
-      registry-username: ${{ github.actor }}
+      registry-username: ${{ secrets.DOCKERHUB_USERNAME }}          
+      registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       
   upload-final-artifact:
     needs: [generate-provenance]
