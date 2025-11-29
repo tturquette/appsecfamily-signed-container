@@ -16,6 +16,7 @@ jobs:
       id-token: write # Required for keyless signing with Sigstore
       packages: write # Required to upload the container image
       contents: read # Required to checkout the repo
+      actions: read
     
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0 # Use the latest stable version
     with:
