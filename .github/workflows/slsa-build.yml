@@ -95,43 +95,6 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: type=sha,format=long
 
-      - name: Sign image with a key
-        if: false
-        run: |
-          images=""
-          for tag in ${TAGS}; do
-            images+="${tag}@${DIGEST} "
-          done
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${images}
-        env:
-          TAGS: ${{ steps.docker_meta.outputs.tags }}
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          DIGEST: ${{ steps.build-image.outputs.digest }}
-
-      - name: Sign the images with GitHub OIDC Token
-        if: false
-        env:
-          DIGEST: ${{ steps.build-image.outputs.digest }}
-          TAGS: ${{ steps.docker_meta.outputs.tags }}
-        run: |
-          images=""
-          for tag in ${TAGS}; do
-            images+="${tag}@${DIGEST} "
-          done
-          cosign sign --yes ${images}
-
-      - name: Write signing result to summary
-        if: false
-        run: |
-          echo "## Image signing (cosign)" >> $GITHUB_STEP_SUMMARY
-          echo "Signed image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload SBOM as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom
-          path: sbom.json
   generate-provenance:
     # Use the official SLSA builder to secure the execution environment
     needs: [build-and-scan]
@@ -145,8 +108,8 @@ jobs:
     with:
       # Pass the image name from the workflow dispatch input
       image: ${{ needs.build-and-scan.outputs.image_tag_name }}
-      #digest: ${{ needs.build-and-scan.outputs.image_digest }}
-      digest: ${{ steps.build-image.outputs.digest }}
+      digest: ${{ needs.build-and-scan.outputs.image_digest }}
+      #digest: ${{ steps.build-image.outputs.digest }}
       registry-username: ${{ github.actor }}
       
   upload-final-artifact:
