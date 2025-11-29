@@ -48,8 +48,8 @@ jobs:
         run: |
           echo "DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }})" >> $GITHUB_ENV          
           echo "Image digest: $DIGEST"
-          echo "IMAGE-NAME=$IMAGE_NAME" >> $GITHUB_ENV
-          echo "IMAGE-DIGEST=$DIGEST" >> $GITHUB_ENV
+          echo "IMAGE_N=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "IMAGE_D=$DIGEST" >> $GITHUB_ENV
 
       - name: Install syft (SBOM generator)
         run: |
@@ -85,8 +85,8 @@ jobs:
         run: |
           echo "## Trivy scan (table)" >> $GITHUB_STEP_SUMMARY
           trivy image --format table --no-progress ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} | sed -n '1,200p' >> $GITHUB_STEP_SUMMARY || true
-          echo $IMAGE-NAME
-          echo $IMAGE-DIGEST
+          echo $IMAGE_N
+          echo $IMAGE_D
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.9.2
@@ -97,8 +97,8 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: type=sha,format=long
     outputs:
-      image-name: ${{ env.IMAGE-NAME }}
-      image-digest: ${{ env.IMAGE-DIGEST }}
+      image-name: ${{ env.IMAGE_N }}
+      image-digest: ${{ env.IMAGE_D }}
 
   generate-provenance:
     # Use the official SLSA builder to secure the execution environment
