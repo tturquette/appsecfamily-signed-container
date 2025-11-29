@@ -53,6 +53,7 @@ jobs:
           DIGEST=$(echo $FULL_IMAGE | cut -d'@' -f2)
           echo "Image digest: $DIGEST"
           echo "IMAGE_N=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "FULL_IMAGE_NAME=$FULL_IMAGE" >> $GITHUB_ENV
           echo "IMAGE_D=$DIGEST" >> $GITHUB_ENV
 
       - name: Install syft (SBOM generator)
@@ -101,8 +102,9 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: type=sha,format=long
     outputs:
-      image-name: ${{ env.IMAGE_N }}
-      image-digest: ${{ env.IMAGE_D }}
+      image_name: ${{ env.IMAGE_N }}
+      image_digest: ${{ env.IMAGE_D }}
+      image_full: ${{ env.FULL_IMAGE_NAME }}
 
   generate-provenance:
     # Use the official SLSA builder to secure the execution environment
@@ -119,8 +121,8 @@ jobs:
       registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       # Pass the image name from the workflow dispatch input
-      image: ${{ needs.build-and-scan.outputs.image-name }}
-      digest: ${{ needs.build-and-scan.outputs.image-digest }}
+      image: ${{ needs.build-and-scan.outputs.image_full }}
+      digest: ${{ needs.build-and-scan.outputs.image_digest }}
       
   upload-final-artifact:
     needs: [generate-provenance]
