@@ -93,8 +93,8 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: type=sha,format=long
     outputs:
-      image-name: ${{ env.IMAGE_NAME }}
-      image-digest: ${{ env.IMAGE_TAG }}
+      image-name: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+      image-digest: ${{ steps.digest.outputs.image_digest }}
 
   generate-provenance:
     # Use the official SLSA builder to secure the execution environment
@@ -104,8 +104,6 @@ jobs:
       packages: write # Required to upload the container image
       contents: read # Required to checkout the repo
       actions: read
-
-    
     
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     secrets: 
