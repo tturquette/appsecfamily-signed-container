@@ -46,15 +46,13 @@ jobs:
       - name: Get image digest
         id: digest
         run: |
-          #sleep 10
           docker pull ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           FULL_IMAGE=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }})
           DIGEST=$(echo $FULL_IMAGE | cut -d'@' -f2)
-          echo "Image digest: $DIGEST"
-          IMAGE_NAME_TAG_INTERNAL=${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          echo "IMAGE_NAME_TAG=$IMAGE_NAME_TAG_INTERNAL" >> $GITHUB_OUTPUT
-          echo "FULL_IMAGE_NAME=$FULL_IMAGE" >> $GITHUB_OUTPUT
-          echo "IMAGE_D=$DIGEST" >> $GITHUB_ENV
+          IMAGE_NAME_TAG_INTERNAL="${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"    
+          echo "image_name_tag=$IMAGE_NAME_TAG_INTERNAL" >> $GITHUB_OUTPUT
+          echo "full_image=$FULL_IMAGE" >> $GITHUB_OUTPUT
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Install syft (SBOM generator)
         run: |
@@ -104,8 +102,8 @@ jobs:
           tags: type=sha,format=long
     outputs:
       image_name: ${{ steps.digest.outputs.image_name_tag }}
-      image_digest: ${{ env.IMAGE_D }}
-      image_full: ${{ env.IMAGE_NAME_TAG }}
+      image_digest: ${{ steps.digest.outputs.digest }}
+      image_full: ${{ steps.digest.outputs.full_image }}
 
   generate-provenance:
     # Use the official SLSA builder to secure the execution environment
