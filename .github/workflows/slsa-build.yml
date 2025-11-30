@@ -15,7 +15,11 @@ jobs:
     env:
       IMAGE_NAME: docker.io/tiagome/appsec-family-cosign
       IMAGE_TAG: ${{ github.sha }}
-
+      
+    outputs:
+      image_name: ${{ steps.digest.outputs.image_name_tag }}
+      image_digest: ${{ steps.digest.outputs.digest }}
+      image_full: ${{ steps.digest.outputs.full_image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -101,11 +105,7 @@ jobs:
         uses: docker/metadata-action@v5.7.0
         with:
           images: ${{ env.IMAGE_NAME }}
-          tags: type=sha,format=long
-    outputs:
-      image_name: ${{ steps.digest.outputs.image_name_tag }}
-      image_digest: ${{ steps.digest.outputs.digest }}
-      image_full: ${{ steps.digest.outputs.full_image }}
+          tags: type=sha,format=long    
 
   generate-provenance:
     # Use the official SLSA builder to secure the execution environment
