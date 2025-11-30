@@ -49,7 +49,9 @@ jobs:
           docker pull ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           FULL_IMAGE=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }})
           DIGEST=$(echo $FULL_IMAGE | cut -d'@' -f2)
-          IMAGE_NAME_TAG_INTERNAL="${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"    
+          IMAGE_NAME_TAG_INTERNAL="${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"  
+          echo "internal image"
+          echo $IMAGE_NAME_TAG_INTERNAL
           echo "image_name_tag=$IMAGE_NAME_TAG_INTERNAL" >> $GITHUB_OUTPUT
           echo "full_image=$FULL_IMAGE" >> $GITHUB_OUTPUT
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
