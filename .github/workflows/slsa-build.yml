@@ -95,9 +95,6 @@ jobs:
           echo "## Trivy scan (table)" >> $GITHUB_STEP_SUMMARY
           trivy image --format table --no-progress ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} | sed -n '1,200p' >> $GITHUB_STEP_SUMMARY || true
 
-      - name: Install Cosign
-        uses: sigstore/cosind-installer@v3.9.2
-
       - id: docker_meta
         uses: docker/metadata-action@v5.7.0
         with:
