@@ -103,7 +103,7 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: type=sha,format=long
     outputs:
-      image_name: ${{ env.IMAGE_NAME_TAG }}
+      image_name: ${{ steps.digest.outputs.image_name_tag }}
       image_digest: ${{ env.IMAGE_D }}
       image_full: ${{ env.IMAGE_NAME_TAG }}
 
