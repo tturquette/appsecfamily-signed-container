@@ -20,6 +20,7 @@ jobs:
       image_name: ${{ steps.digest.outputs.image_name_tag }}
       image_digest: ${{ steps.digest.outputs.digest }}
       image_full: ${{ steps.digest.outputs.full_image }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,12 +52,12 @@ jobs:
         id: digest
         run: |
           docker pull ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
           FULL_IMAGE=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }})
-          DIGEST=$(echo $FULL_IMAGE | cut -d'@' -f2)
-          IMAGE_NAME_TAG_INTERNAL="${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"  
-          echo "internal image"
-          echo $IMAGE_NAME_TAG_INTERNAL
-          echo "image_name_tag=$IMAGE_NAME_TAG_INTERNAL" >> $GITHUB_OUTPUT
+          DIGEST=$(echo "$FULL_IMAGE" | cut -d'@' -f2)
+          IMAGE_NAME_TAG="${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+
+          echo "image_name_tag=$IMAGE_NAME_TAG" >> $GITHUB_OUTPUT
           echo "full_image=$FULL_IMAGE" >> $GITHUB_OUTPUT
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
@@ -68,15 +69,14 @@ jobs:
         id: sbom
         run: |
           IMAGE=${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          syft $IMAGE -o json > sbom.json
+          syft "$IMAGE" -o json > sbom.json
           echo "SBOM_PATH=sbom.json" >> $GITHUB_ENV
 
       - name: Publish SBOM to job summary
         run: |
           echo "## SBOM (syft json)" >> $GITHUB_STEP_SUMMARY
-          echo '\n<details><summary>View SBOM (JSON)</summary>\n' >> $GITHUB_STEP_SUMMARY
+          echo '<details><summary>View SBOM (JSON)</summary>' >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
-          # crop the sbom to keep the summary reasonable (first 200 lines)
           head -n 200 sbom.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo '</details>' >> $GITHUB_STEP_SUMMARY
@@ -87,19 +87,16 @@ jobs:
         with:
           image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           format: 'table'
-          exit-code: '0' # fail the job for found vulnerabilities; change to '0' to continue
+          exit-code: '0'
 
       - name: Append Trivy report to summary
         if: always()
         run: |
           echo "## Trivy scan (table)" >> $GITHUB_STEP_SUMMARY
           trivy image --format table --no-progress ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} | sed -n '1,200p' >> $GITHUB_STEP_SUMMARY || true
-          echo "printing image names"
-          echo ${{ env.IMAGE_NAME_TAG }}
-          echo ${{ env.IMAGE_D }}
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.9.2
+        uses: sigstore/cosind-installer@v3.9.2
 
       - id: docker_meta
         uses: docker/metadata-action@v5.7.0
@@ -108,12 +105,11 @@ jobs:
           tags: type=sha,format=long    
 
   generate-provenance:
-    # Use the official SLSA builder to secure the execution environment
     needs: [build-and-scan]
     permissions:
-      id-token: write # Required for keyless signing with Sigstore
-      packages: write # Required to upload the container image
-      contents: read # Required to checkout the repo
+      id-token: write
+      packages: write
+      contents: read
       actions: read
     
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
@@ -121,41 +117,35 @@ jobs:
       registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
       registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
-      # Pass the image name from the workflow dispatch input
       image: ${{ needs.build-and-scan.outputs.image_name }}
       digest: ${{ needs.build-and-scan.outputs.image_digest }}
-      
+
   upload-final-artifact:
     needs: [generate-provenance]
     runs-on: ubuntu-latest
+
     steps:
       - name: Download SLSA Attestation Artifact
         uses: actions/download-artifact@v4
         with:
-          # The slsa-github-generator names its artifacts with a specific format
           name: attestations
           path: attestation_download
 
       - name: Find and Upload Final Attestation File
         id: final_upload
         run: |
-          # The downloaded artifact will be in a folder structure. 
-          # We search for the *.intoto.jsonl file created by the generator.
           ATTESTATION_FILE=$(find attestation_download -name "*.intoto.jsonl" -print -quit)
-          
+
           if [ -z "$ATTESTATION_FILE" ]; then
             echo "::error::SLSA Attestation file not found."
             exit 1
           fi
 
-          echo "Found attestation file: $ATTESTATION_FILE"
           echo "attestation_path=$ATTESTATION_FILE" >> $GITHUB_OUTPUT
 
       - name: Upload Renamed Attestation as Artifact
         uses: actions/upload-artifact@v4
         with:
-          # Give the artifact a clear, custom name for easy download
           name: nginx-provenance-slsa3
           path: ${{ steps.final_upload.outputs.attestation_path }}
           retention-days: 7
-          
